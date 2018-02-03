@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/view_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            android:orientation="horizontal"
+            app:layout_scrollFlags="enterAlways|scroll">
+
+            <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="?actionBarSize"
+                android:layout_height="?actionBarSize"
+                android:background="@drawable/bg_transparent_select"
+                android:padding="@dimen/padding_arrow_back"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_arrow_back_white_24dp" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/margin_left_title_toolbar"
+                android:layout_toRightOf="@+id/btn_back"
+                android:singleLine="true"
+                android:text="@string/Position"
+                android:textColor="@color/white"
+                android:textSize="@dimen/text_size_title"
+                android:textStyle="bold" />
+
+            <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/btn_location"
+                android:layout_width="?actionBarSize"
+                android:layout_height="?actionBarSize"
+                android:layout_alignParentRight="true"
+                android:background="@drawable/bg_transparent_select"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@mipmap/ic_launcher"
+                android:tint="@color/white" />
+            <android.support.v7.widget.AppCompatImageButton
+                android:id="@+id/btn_choose_all"
+                android:layout_toLeftOf="@+id/btn_location"
+                android:layout_width="?actionBarSize"
+                android:layout_height="?actionBarSize"
+                android:background="@drawable/bg_transparent_select"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_network_wifi_black_48dp"
+                android:tint="@color/white" />
+
+
+        </RelativeLayout>
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tab"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            android:theme="@style/StyleTab"
+            app:tabIndicatorColor="@color/white"
+            app:theme="@style/StyleTab" />
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vp_position"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/btn_reload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="16dp"
+        android:layout_marginRight="16dp"
+        android:src="@drawable/ic_autorenew_white_24dp"
+        android:theme="@style/StyleFloating"
+        app:fabSize="normal" />
+</android.support.design.widget.CoordinatorLayout>

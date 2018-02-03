@@ -1,0 +1,17 @@
+﻿Java spring: 
+•	Tìm hiểu lập trình hướng đối tượng.
+•	Tìm hiểu kiến trúc một project java spring.
+•	Tìm hiểu các anomation như:  
+@SpringBootApplication
+	     @PropertySource
+	     @RestController
+	     @RequestMapping
+	     @Service
+             @Component
+	     @Autowired
+
+
+•	Tìm hiểu JOOQ.
+•	Tìm hiểu cách kết nối với database bằng java thông qua JOOQ.
+•	Cách chèn giữ liệu vào trong database khi nhận được một request từ client.
+…..

@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">WifiPosition</string>
+    <string name="Position">Position</string>
+    <string name="Loading">Loading...</string>
+    <string name="Please_choose_wifi_to_upload">Please choose wifi to upload</string>
+    <string name="Please_input_enought_info">Please write enougth info</string>
+    <string name="Have_not_building">Hava not building</string>
+    <string name="Have_not_room">Have not room</string>
+    <string name="Location">Location</string>
+</resources>

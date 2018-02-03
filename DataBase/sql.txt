@@ -1,0 +1,6 @@
+﻿Thiết kế database ( sql ):
+Tạo file .sql với nội dung:
+•	Tạo bản với các trường fingerprinter_infor: id ( int, auto increasement ),  ap_name ( text ), mac_address ( text), ip_address ( text ), rss ( int ), x ( float ), y ( address ), room_id ( int ).
+•	Tạo bảng room:id ( auto increasement), room_name ( auto increasement ), buiding_id ( int).
+•	 Tạo bảng buiding: id ( auto increatemt ), buiding_name, address.
+•	Thử thêm, xoá.. bằng các câu lên sql.
