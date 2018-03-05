@@ -32,5 +32,6 @@ public interface Rest {
     @POST("api/mobile/localization")
     Observable<GetLocationResponse> getLocation(@Body RequestBody requestBody);
 
-
+    @POST("api/mobile/motion-info")
+    Observable<PostReferencePoint> postMotionInfo(@Body RequestBody requestBody);
 }

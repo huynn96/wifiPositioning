@@ -15,6 +15,7 @@ import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
+import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 import com.uet.wifiposition.remote.requestbody.PostReferencePointGaussRequest;
 import com.uet.wifiposition.remote.requestbody.PostReferencePointRequestBody;
 
@@ -119,6 +120,14 @@ public class Interactor implements IInteractor {
     public Observable<PostReferencePoint> postReferencePointGauss(PostReferencePointGaussRequest postReferencePointGaussRequest) {
         RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(postReferencePointGaussRequest));
         return mRes.postReferencePointGauss(requestBodyD)
+                .subscribeOn(mScheduel)
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    @Override
+    public Observable<PostReferencePoint> postMotionInfo(PostMotionSensorInfoRequestBody postMotionSensorInfoRequestBody) {
+        RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(postMotionSensorInfoRequestBody));
+        return mRes.postMotionInfo(requestBodyD)
                 .subscribeOn(mScheduel)
                 .observeOn(AndroidSchedulers.mainThread());
     }

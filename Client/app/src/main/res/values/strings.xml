@@ -7,4 +7,11 @@
     <string name="Have_not_building">Hava not building</string>
     <string name="Have_not_room">Have not room</string>
     <string name="Location">Location</string>
+    <string name="activity_prompt">Choose activity type</string>
+    <string-array name="activity_types">
+        <item>Standing</item>
+        <item>Walking</item>
+        <item>Running</item>
+        <item>Irregular movement</item>
+    </string-array>
 </resources>
