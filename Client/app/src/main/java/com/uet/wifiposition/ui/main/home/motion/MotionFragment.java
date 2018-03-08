@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.uet.wifiposition.R;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
@@ -17,7 +18,9 @@ import com.uet.wifiposition.remote.model.motion.Acceleration;
 import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 
-import java.sql.Timestamp;
+import org.json.JSONArray;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +37,8 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
     private List<Acceleration> accelerationData;
     private MotionPresenter motionPresenter;
     private Spinner spinner;
+    private TextView resultActivity;
+    private long lastTime;
 
     @Override
     public int getLayoutMain() {
@@ -44,6 +49,7 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
     public void findViewByIds(View view) {
         startButton = this.getActivity().findViewById(R.id.start_pause_motion_button);
         spinner = this.getActivity().findViewById(R.id.activity_type);
+        resultActivity = this.getActivity().findViewById(R.id.result_activity);
     }
 
     @Override
@@ -85,16 +91,30 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     public void startButton() {
         accelerationData = new ArrayList<>();
-        SM.registerListener(this, myAcceleration, SensorManager.SENSOR_DELAY_GAME);
+        lastTime = 1;
+        SM.registerListener(this, myAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
+        timer = new CountDownTimer(3000000, 2000) {
+
+            public void onTick(long millisUntilFinished) {
+                Log.d("COUNT", String.valueOf(accelerationData.size()));
+                PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
+                request.setAccelerations(accelerationData);
+                accelerationData = new ArrayList<>();
+                request.setTypeActivity(getTypeActivity((String) spinner.getSelectedItem()));
+                motionPresenter.postMotionInfo(request);
+            }
+
+            public void onFinish() {
+
+            }
+
+        }.start();
     }
 
     public void onPause() {
         super.onPause();
-        PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
-        request.setAccelerations(accelerationData);
-        request.setTypeActivity(getTypeActivity((String) spinner.getSelectedItem()));
-        motionPresenter.postMotionInfo(request);
         SM.unregisterListener(this);
+        timer.cancel();
     }
 
     @Override
@@ -104,7 +124,7 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        long time = System.currentTimeMillis();
+        long time = System.nanoTime();
         accelerationData.add(new Acceleration(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2], time));
     }
 
@@ -115,11 +135,22 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     @Override
     public void finishPostMotion(PostReferencePoint response) {
-        showMessage("upload success");
+        List<Integer> result = response.getResult();
+        if (lastTime < response.getLastTime()) {
+            int a = result.get(0);
+            if (a == 0) {
+                resultActivity.setText("Standing");
+            }
+            if (a == 1) {
+                resultActivity.setText("Walking");
+            }
+            lastTime = response.getLastTime();
+        }
+
     }
 
     @Override
     public void errorPostMotion(Throwable error) {
-        showMessage(error.getMessage());
+//        showMessage(error.getMessage());
     }
 }
