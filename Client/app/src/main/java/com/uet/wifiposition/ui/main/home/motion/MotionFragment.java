@@ -9,9 +9,9 @@ import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.uet.wifiposition.R;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.motion.Acceleration;
@@ -19,26 +19,35 @@ import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.lang.reflect.Array;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.socket.client.IO;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 
 
 /**
  * Created by ducnd on 11/24/17.
  */
 
-public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> implements SensorEventListener, MotionContact.View {
+public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> implements SensorEventListener {
     private Sensor myAcceleration;
     private SensorManager SM;
     private Button startButton;
     private CountDownTimer timer;
     private List<Acceleration> accelerationData;
-    private MotionPresenter motionPresenter;
-    private Spinner spinner;
     private TextView resultActivity;
     private long lastTime;
+    private Socket socket;
+    private Gson goGson = new Gson();
+
+    public MotionFragment() {
+    }
 
     @Override
     public int getLayoutMain() {
@@ -48,13 +57,11 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
     @Override
     public void findViewByIds(View view) {
         startButton = this.getActivity().findViewById(R.id.start_pause_motion_button);
-        spinner = this.getActivity().findViewById(R.id.activity_type);
         resultActivity = this.getActivity().findViewById(R.id.result_activity);
     }
 
     @Override
     public void initComponents(View view) {
-        motionPresenter = new MotionPresenter(this);
         SM = (SensorManager) this.getActivity().getSystemService(Context.SENSOR_SERVICE);
         myAcceleration = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         final Boolean[] start = {true};
@@ -72,21 +79,13 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
                 }
             }
         });
-    }
 
-    public int getTypeActivity(String typeActivity) {
-        switch (typeActivity) {
-            case "Standing":
-                return 0;
-            case "Walking":
-                return 1;
-            case "Running":
-                return 2;
-            case "Irregular movement":
-                return 3;
-            default:
-                return -1;
+        try {
+            socket = IO.socket("http://192.168.1.40:3000");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
         }
+        socket.connect();
     }
 
     public void startButton() {
@@ -100,8 +99,15 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
                 PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
                 request.setAccelerations(accelerationData);
                 accelerationData = new ArrayList<>();
-                request.setTypeActivity(getTypeActivity((String) spinner.getSelectedItem()));
-                motionPresenter.postMotionInfo(request);
+                socket.emit("localization", goGson.toJson(request));
+                socket.on("localization", new Emitter.Listener() {
+                    @Override
+                    public void call(Object... args) {
+                        JSONObject response = (JSONObject)args[0];
+                        finishPostMotion(response);
+                        Log.d("Socket_RESPONSE", response.toString());
+                    }
+                });
             }
 
             public void onFinish() {
@@ -133,23 +139,25 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     }
 
-    @Override
-    public void finishPostMotion(PostReferencePoint response) {
-        List<Integer> result = response.getResult();
-        if (lastTime < response.getLastTime()) {
-            int a = result.get(0);
-            if (a == 0) {
-                resultActivity.setText("Standing");
+    public void finishPostMotion(JSONObject response) {
+        try {
+            JSONArray result = response.getJSONArray("result");
+            Log.d("RESULT", String.valueOf(result));
+            if (lastTime < response.getLong("lastTime")) {
+                int a = result.getInt(0);
+                if (a == 0) {
+                    resultActivity.setText("Standing");
+                }
+                if (a == 1) {
+                    resultActivity.setText("Walking");
+                }
+                lastTime = response.getLong("lastTime");
             }
-            if (a == 1) {
-                resultActivity.setText("Walking");
-            }
-            lastTime = response.getLastTime();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-
     }
 
-    @Override
     public void errorPostMotion(Throwable error) {
 //        showMessage(error.getMessage());
     }

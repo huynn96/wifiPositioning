@@ -9,7 +9,6 @@ import java.util.List;
  */
 
 public class PostMotionSensorInfoRequestBody {
-    private int typeActivity;
     private List<Acceleration> accelerations;
 
     public List<Acceleration> getAccelerations() {
@@ -18,13 +17,5 @@ public class PostMotionSensorInfoRequestBody {
 
     public void setAccelerations(List<Acceleration> accelerations) {
         this.accelerations = accelerations;
-    }
-
-    public int getTypeActivity() {
-        return typeActivity;
-    }
-
-    public void setTypeActivity(int typeActivity) {
-        this.typeActivity = typeActivity;
     }
 }

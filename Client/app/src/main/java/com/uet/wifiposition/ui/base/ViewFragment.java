@@ -2,6 +2,8 @@ package com.uet.wifiposition.ui.base;
 
 import android.os.Bundle;
 
+import java.net.URISyntaxException;
+
 /**
  * Created by ducnd on 11/11/2016.
  */

@@ -14,6 +14,7 @@ import android.view.animation.AnimationUtils;
 import com.uet.wifiposition.utils.*;
 
 
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
