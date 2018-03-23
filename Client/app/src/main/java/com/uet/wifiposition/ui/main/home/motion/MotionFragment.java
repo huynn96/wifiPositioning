@@ -13,17 +13,18 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.uet.wifiposition.R;
-import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.motion.Acceleration;
+import com.uet.wifiposition.remote.model.motion.Direction;
 import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.socket.client.IO;
@@ -37,14 +38,17 @@ import io.socket.emitter.Emitter;
 
 public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> implements SensorEventListener {
     private Sensor myAcceleration;
+    private Sensor myCompass;
     private SensorManager SM;
     private Button startButton;
     private CountDownTimer timer;
     private List<Acceleration> accelerationData;
+    private List<Direction> directionData;
     private TextView resultActivity;
-    private long lastTime;
     private Socket socket;
     private Gson goGson = new Gson();
+    private float accelerometerValues[];
+    private float geomagneticMatrix[];
 
     public MotionFragment() {
     }
@@ -64,6 +68,7 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
     public void initComponents(View view) {
         SM = (SensorManager) this.getActivity().getSystemService(Context.SENSOR_SERVICE);
         myAcceleration = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        myCompass = SM.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         final Boolean[] start = {true};
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,21 +95,30 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     public void startButton() {
         accelerationData = new ArrayList<>();
-        lastTime = 1;
-        SM.registerListener(this, myAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
-        timer = new CountDownTimer(3000000, 2000) {
+        directionData = new ArrayList<>();
+        accelerometerValues = null;
+        geomagneticMatrix = null;
+        SM.registerListener(this, myAcceleration, SensorManager.SENSOR_DELAY_GAME);
+        SM.registerListener(this, myCompass, SensorManager.SENSOR_DELAY_UI);
+        timer = new CountDownTimer(3000000, 3000) {
 
             public void onTick(long millisUntilFinished) {
                 Log.d("COUNT", String.valueOf(accelerationData.size()));
                 PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
                 request.setAccelerations(accelerationData);
+                request.setDirections(directionData);
                 accelerationData = new ArrayList<>();
+                directionData = new ArrayList<>();
                 socket.emit("localization", goGson.toJson(request));
                 socket.on("localization", new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
                         JSONObject response = (JSONObject)args[0];
-                        finishPostMotion(response);
+                        getActivity().runOnUiThread(new Runnable() {
+                            public void run(){
+                                finishPostMotion(response);
+                            }
+                        });
                         Log.d("Socket_RESPONSE", response.toString());
                     }
                 });
@@ -130,8 +144,40 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        long time = System.nanoTime();
-        accelerationData.add(new Acceleration(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2], time));
+        Sensor sensor = sensorEvent.sensor;
+
+        switch (sensorEvent.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                long time = System.nanoTime();
+                accelerationData.add(new Acceleration(sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2], time));
+                accelerometerValues = sensorEvent.values.clone();
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                geomagneticMatrix = sensorEvent.values.clone();
+                break;
+        }
+
+        if (geomagneticMatrix != null && accelerometerValues != null && sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+
+            float[] R = new float[16];
+            float[] I = new float[16];
+            float[] outR = new float[16];
+            //Get the rotation matrix, then remap it from camera surface to world coordinates
+            SensorManager.getRotationMatrix(R, I, accelerometerValues, geomagneticMatrix);
+            float values[] = new float[4];
+            SensorManager.getOrientation(R,values);
+            long time = System.nanoTime();
+            int direction = normalizeDegrees(Math.toDegrees(values[0]));
+            int pitch = normalizeDegrees(Math.toDegrees(values[1]));
+            int roll = normalizeDegrees(Math.toDegrees(values[2]));
+            directionData.add(new Direction(direction, pitch, roll, time));
+            int[] list = {direction, pitch, roll};
+            Log.d("DIRECTION", Arrays.toString(list));
+        }
+    }
+
+    private int normalizeDegrees(double rads){
+        return (int)((rads+360)%360);
     }
 
     @Override
@@ -141,18 +187,10 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     public void finishPostMotion(JSONObject response) {
         try {
-            JSONArray result = response.getJSONArray("result");
-            Log.d("RESULT", String.valueOf(result));
-            if (lastTime < response.getLong("lastTime")) {
-                int a = result.getInt(0);
-                if (a == 0) {
-                    resultActivity.setText("Standing");
-                }
-                if (a == 1) {
-                    resultActivity.setText("Walking");
-                }
-                lastTime = response.getLong("lastTime");
-            }
+            double offset = response.getDouble("offset");
+            int direction = response.getInt("direction");
+            Log.d("RESULT", String.valueOf(offset));
+            resultActivity.setText(String.format("%s (m)\n%s (degree)", offset, direction));
         } catch (JSONException e) {
             e.printStackTrace();
         }
