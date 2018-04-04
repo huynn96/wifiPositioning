@@ -13,6 +13,7 @@ import com.uet.wifiposition.remote.model.WifiInfoModel;
 import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
+import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 import com.uet.wifiposition.ui.main.home.publicwifiinfo.PublicWifiInfoFragment;
 import com.uet.wifiposition.ui.main.home.scanwifi.ScanWifiInfoFragment;
@@ -121,12 +122,22 @@ public class ScanAndUpdateFragment extends BaseMvpFragment<ScanAndUpdateContract
                     model.setFirst(true);
                     model.setX(10);
                     model.setY(7);
-                    mPresenter.getLocation(buildingId, roomId, infoReferencePointInputs, model);
+                    GetLocationRequest request = new GetLocationRequest();
+                    request.setBuildingId(buildingId);
+                    request.setRoomId(roomId);
+                    request.setExtendGetLocationModel(model);
+                    request.setInfos(infoReferencePointInputs);
+                    mPresenter.getLocation(request);
                 } else {
                     ExtendGetLocationModel model = new ExtendGetLocationModel();
                     model.setFirst(false);
                     model.setTransactionId(tracking.getTransactionId());
-                    mPresenter.getLocation(buildingId, roomId, infoReferencePointInputs, model);
+                    GetLocationRequest request = new GetLocationRequest();
+                    request.setBuildingId(buildingId);
+                    request.setRoomId(roomId);
+                    request.setExtendGetLocationModel(model);
+                    request.setInfos(infoReferencePointInputs);
+                    mPresenter.getLocation(request);
                 }
 
                 break;

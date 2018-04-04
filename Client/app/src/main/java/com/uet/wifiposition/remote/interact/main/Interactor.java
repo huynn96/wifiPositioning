@@ -16,6 +16,7 @@ import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
+import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
 import com.uet.wifiposition.remote.requestbody.PostReferencePointGaussRequest;
 import com.uet.wifiposition.remote.requestbody.PostReferencePointRequestBody;
 
@@ -125,7 +126,7 @@ public class Interactor implements IInteractor {
     }
 
     @Override
-    public Observable<PostReferencePoint> postMotionInfo(PostMotionSensorInfoRequestBody postMotionSensorInfoRequestBody) {
+    public Observable<PostReferencePoint> postMotionInfo(PostRPGaussianMotionRequestBody postMotionSensorInfoRequestBody) {
         RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(postMotionSensorInfoRequestBody));
         return mRes.postMotionInfo(requestBodyD)
                 .subscribeOn(mScheduel)
@@ -137,16 +138,10 @@ public class Interactor implements IInteractor {
     }
 
     @Override
-    public Observable<GetLocationResponse> getLocation(int buildingId, int roomId, List<InfoReferencePointInput> infoReferencePointInputs, ExtendGetLocationModel firstGetLocationModel) {
-        GetLocationRequest requestBody = new GetLocationRequest();
-        requestBody.setBuildingId(buildingId);
-        requestBody.setRoomId(roomId);
-        requestBody.setInfos(infoReferencePointInputs);
-        requestBody.setInfos(infoReferencePointInputs);
-        requestBody.setExtendGetLocationModel(firstGetLocationModel);
-        String text = goGson.toJson(requestBody);
+    public Observable<GetLocationResponse> getLocation(GetLocationRequest request) {
+        String text = goGson.toJson(request);
         Log.d("request location:", text);
-        RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(requestBody));
+        RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(request));
         return mRes.getLocation(requestBodyD)
                 .subscribeOn(mScheduel)
                 .observeOn(AndroidSchedulers.mainThread());

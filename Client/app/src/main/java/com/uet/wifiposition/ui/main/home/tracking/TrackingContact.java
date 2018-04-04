@@ -1,21 +1,18 @@
-package com.uet.wifiposition.ui.main.home;
+package com.uet.wifiposition.ui.main.home.tracking;
 
 import com.uet.wifiposition.remote.interact.interf.IBasePresenter;
-import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
-import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
+import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.ui.base.ViewUI;
 
-import java.util.List;
-
 /**
- * Created by ducnd on 10/13/17.
+ * Created by huynn on 03/04/2018.
  */
 
-public interface ScanAndUpdateContract {
+public interface TrackingContact {
     interface View extends ViewUI {
-        void finishGetLocaiton(GetLocationResponse response);
+        void finishGetLocation(GetLocationResponse response);
 
         void errorGetLocation(Throwable error);
     }

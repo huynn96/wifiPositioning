@@ -1,19 +1,16 @@
-package com.uet.wifiposition.ui.main.home;
+package com.uet.wifiposition.ui.main.home.tracking;
 
 import com.uet.wifiposition.remote.interact.main.BasePresenter;
 import com.uet.wifiposition.remote.interact.main.Interactor;
-import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
-import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
-
-import java.util.List;
+import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 
 /**
- * Created by ducnd on 10/13/17.
+ * Created by huynn on 03/04/2018.
  */
 
-public class ScanAndUpdatePresenter extends BasePresenter<ScanAndUpdateContract.View> implements ScanAndUpdateContract.Presenter {
-    public ScanAndUpdatePresenter(ScanAndUpdateContract.View view) {
+public class TrackingPresenter  extends BasePresenter<TrackingContact.View> implements TrackingContact.Presenter {
+    public TrackingPresenter(TrackingContact.View view) {
         super(view);
     }
 
@@ -23,9 +20,8 @@ public class ScanAndUpdatePresenter extends BasePresenter<ScanAndUpdateContract.
         subscribeHasDispose(Interactor.getInstance().getLocation(request),
                 response -> {
                     mView.hideProgress();
-                    mView.finishGetLocaiton(response);
-                },
-                error -> {
+                    mView.finishGetLocation(response);
+                }, error -> {
                     mView.hideProgress();
                     mView.errorGetLocation(error);
                 });
