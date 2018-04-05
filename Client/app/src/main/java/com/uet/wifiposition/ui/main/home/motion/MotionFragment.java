@@ -137,6 +137,18 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
             e.printStackTrace();
         }
         socket.connect();
+        socket.on("localization", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject response = (JSONObject) args[0];
+                getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        finishPostMotion1(response);
+                    }
+                });
+                Log.d("Socket_RESPONSE", response.toString());
+            }
+        });
     }
 
     public void startButton() {
@@ -153,21 +165,11 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
                 PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
                 request.setAccelerations(accelerationData);
                 request.setDirections(directionData);
+                if (accelerationData.size() > 0) {
+                    socket.emit("localization", goGson.toJson(request));
+                }
                 accelerationData = new ArrayList<>();
                 directionData = new ArrayList<>();
-                socket.emit("localization", goGson.toJson(request));
-                socket.on("localization", new Emitter.Listener() {
-                    @Override
-                    public void call(Object... args) {
-                        JSONObject response = (JSONObject) args[0];
-                        getActivity().runOnUiThread(new Runnable() {
-                            public void run() {
-                                finishPostMotion1(response);
-                            }
-                        });
-//                        Log.d("Socket_RESPONSE", response.toString());
-                    }
-                });
             }
 
             public void onFinish() {
@@ -264,6 +266,8 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
             }
             double offset = response.getDouble("offset");
             int direction = response.getInt("direction");
+            Log.d("DIRECTION", String.valueOf(direction));
+            Log.d("OFFSET", String.valueOf(offset));
             resultActivity.setText(String.format("%s (m)\n%s (degree)", offset, direction));
             PostRPGaussianMotionRequestBody requestBody = new PostRPGaussianMotionRequestBody();
             requestBody.setDirection(direction);
@@ -274,6 +278,7 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
             requestBody.setY1(Integer.parseInt(edtY1.getText().toString()));
             requestBody.setY2(Integer.parseInt(edtY2.getText().toString()));
             mPresenter.postMotionInfo(requestBody);
+            onPause();
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -303,12 +308,12 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
 
     @Override
     public void finishPostMotion(PostReferencePoint response) {
-
+        showMessage("upload success");
     }
 
     @Override
     public void errorPostMotion(Throwable error) {
-
+        showMessage(error.getMessage());
     }
 
     @Override

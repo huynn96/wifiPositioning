@@ -90,7 +90,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        socket.connect();
+//        socket.connect();
     }
 
     public void startButton() {
