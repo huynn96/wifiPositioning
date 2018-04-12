@@ -4,7 +4,7 @@ import com.uet.wifiposition.remote.interact.interf.IBasePresenter;
 import com.uet.wifiposition.remote.model.getbuilding.GetBuildingsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.GetRoomsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
-import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
+import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
 import com.uet.wifiposition.ui.base.ViewUI;
 
@@ -22,7 +22,7 @@ public interface MotionContact {
 
         void errorGetRooms(Throwable error);
 
-        void finishPostMotion(PostReferencePoint response);
+        void finishPostMotion(PostMotionResponse response);
 
         void errorPostMotion(Throwable error);
     }

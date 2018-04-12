@@ -21,6 +21,7 @@ import com.uet.wifiposition.remote.model.getbuilding.GetBuildingsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.GetRoomsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.getbuilding.RoomModel;
+import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.model.motion.Acceleration;
 import com.uet.wifiposition.remote.model.motion.Direction;
 import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
@@ -33,7 +34,6 @@ import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import io.socket.client.IO;
@@ -132,11 +132,11 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
         });
 
         try {
-            socket = IO.socket("http://192.168.1.40:3000");
+            socket = IO.socket("http://192.168.43.145:3000");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        socket.connect();
+//        socket.connect();
         socket.on("localization", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -273,10 +273,6 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
             requestBody.setDirection(direction);
             requestBody.setOffset(offset);
             requestBody.setRoomId(roomModels.get((int) spRoom.getTag()).getRoomId());
-            requestBody.setX1(Integer.parseInt(edtX1.getText().toString()));
-            requestBody.setX2(Integer.parseInt(edtX2.getText().toString()));
-            requestBody.setY1(Integer.parseInt(edtY1.getText().toString()));
-            requestBody.setY2(Integer.parseInt(edtY2.getText().toString()));
             mPresenter.postMotionInfo(requestBody);
             onPause();
         } catch (JSONException e) {
@@ -307,7 +303,7 @@ public class MotionFragment extends BaseMvpFragment<MotionContact.Presenter> imp
     }
 
     @Override
-    public void finishPostMotion(PostReferencePoint response) {
+    public void finishPostMotion(PostMotionResponse response) {
         showMessage("upload success");
     }
 

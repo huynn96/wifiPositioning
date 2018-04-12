@@ -121,7 +121,7 @@ public class TrackingView extends View {
         }
     }
 
-    public void addPath(float x, float y) {
+    public void addPath(int x, int y) {
         if (!isStart) {
             isStart = true;
             pathTracking.moveTo(x * sizeCell, y * sizeCell);
@@ -133,6 +133,10 @@ public class TrackingView extends View {
         model.setY(y);
         locationModels.add(model);
         invalidate();
+    }
+
+    public void clearPath() {
+        locationModels = new ArrayList<>();
     }
 
     @Override

@@ -13,19 +13,26 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.uet.wifiposition.R;
+import com.uet.wifiposition.remote.model.WifiInfoModel;
+import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
+import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
+import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
+import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.model.getposition.LocationModel;
 import com.uet.wifiposition.remote.model.motion.Acceleration;
 import com.uet.wifiposition.remote.model.motion.Direction;
 import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
+import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 import com.uet.wifiposition.ui.customview.TrackingView;
+import com.uet.wifiposition.ui.main.home.publicwifiinfo.PublicWifiInfoFragment;
+import com.uet.wifiposition.ui.main.home.scanwifi.ScanWifiInfoFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import io.socket.client.IO;
@@ -36,13 +43,13 @@ import io.socket.emitter.Emitter;
  * Created by ducnd on 11/24/17.
  */
 
-public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter> implements SensorEventListener {
+public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter> implements SensorEventListener, TrackingContact.View {
     private TrackingView trackingView;
     private int transactionId;
     private Sensor myAcceleration;
     private Sensor myCompass;
     private SensorManager SM;
-    private Button startButton;
+    private Button collectButton, localizationButton;
     private CountDownTimer timer;
     private List<Acceleration> accelerationData;
     private List<Direction> directionData;
@@ -51,6 +58,8 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     private Gson goGson = new Gson();
     private float accelerometerValues[];
     private float geomagneticMatrix[];
+    private TrackingPresenter mPresenter;
+    private LocationModel lastLocation;
 
     @Override
     public int getLayoutMain() {
@@ -60,25 +69,42 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     @Override
     public void findViewByIds(View view) {
         trackingView = view.findViewById(R.id.tracking_view);
-        startButton = this.getActivity().findViewById(R.id.start_pause_tracking_button);
-        resultActivity = this.getActivity().findViewById(R.id.result_activity_tracking);
+        collectButton = this.getActivity().findViewById(R.id.collect);
+        localizationButton = this.getActivity().findViewById(R.id.localization);
+//        resultActivity = this.getActivity().findViewById(R.id.result_activity_tracking);
     }
 
     @Override
     public void initComponents(View view) {
+        mPresenter = new TrackingPresenter(this);
         SM = (SensorManager) this.getActivity().getSystemService(Context.SENSOR_SERVICE);
         myAcceleration = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         myCompass = SM.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         final Boolean[] start = {true};
-        startButton.setOnClickListener(new View.OnClickListener() {
+        collectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (start[0]) {
-                    startButton.setText("Pause");
+                    collectButton.setText("Pause");
                     start[0] = false;
                     startButton();
                 } else {
-                    startButton.setText("Start");
+                    collectButton.setText("Collect");
+                    start[0] = true;
+                    onPause();
+                }
+            }
+        });
+
+        localizationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (start[0]) {
+                    localizationButton.setText("Pause");
+                    start[0] = false;
+                    startButton();
+                } else {
+                    localizationButton.setText("Localization");
                     start[0] = true;
                     onPause();
                 }
@@ -90,10 +116,25 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-//        socket.connect();
+        socket.connect();
+        socket.on("localization", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject response = (JSONObject)args[0];
+                getActivity().runOnUiThread(new Runnable() {
+                    public void run(){
+                        finishPostMotion1(response);
+                    }
+                });
+                Log.d("Socket_RESPONSE", response.toString());
+            }
+        });
     }
 
     public void startButton() {
+        trackingView.clearPath();
+        lastLocation = new LocationModel(1,1);
+        lastLocation.setTransactionId(0);
         accelerationData = new ArrayList<>();
         directionData = new ArrayList<>();
         accelerometerValues = null;
@@ -107,21 +148,11 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
                 PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
                 request.setAccelerations(accelerationData);
                 request.setDirections(directionData);
+                if (accelerationData.size() > 0) {
+                    socket.emit("localization", goGson.toJson(request));
+                }
                 accelerationData = new ArrayList<>();
                 directionData = new ArrayList<>();
-                socket.emit("localization", goGson.toJson(request));
-                socket.on("localization", new Emitter.Listener() {
-                    @Override
-                    public void call(Object... args) {
-                        JSONObject response = (JSONObject)args[0];
-                        getActivity().runOnUiThread(new Runnable() {
-                            public void run(){
-                                finishPostMotion(response);
-                            }
-                        });
-                        Log.d("Socket_RESPONSE", response.toString());
-                    }
-                });
             }
 
             public void onFinish() {
@@ -185,19 +216,72 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
 
     }
 
-    public void finishPostMotion(JSONObject response) {
+    public void finishPostMotion1(JSONObject response) {
         try {
             double offset = response.getDouble("offset");
             int direction = response.getInt("direction");
-            Log.d("RESULT", String.valueOf(offset));
-            resultActivity.setText(String.format("%s (m)\n%s (degree)", offset, direction));
+            PostRPGaussianMotionRequestBody request = new PostRPGaussianMotionRequestBody();
+            ScanWifiInfoFragment scan = (ScanWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 0);
+            List<WifiInfoModel> wifiInfoModels = scan.getListWifiInfoChoose();
+            if (wifiInfoModels == null || wifiInfoModels.size() == 0) {
+                showMessage(R.string.Loading);
+                return;
+            }
+            PublicWifiInfoFragment publicInfo = (PublicWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 1);
+            int buildingId = publicInfo.getBuildingId();
+            int roomId = publicInfo.getRoomId();
+            if (buildingId == -1 || roomId == -1) {
+                showMessage(R.string.Loading);
+                return;
+            }
+            List<InfoReferencePointInput> infoReferencePointInputs = new ArrayList<>();
+            for (WifiInfoModel wifiInfoModel : wifiInfoModels) {
+                Log.d("Wifi", String.valueOf(wifiInfoModel));
+                infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
+            }
+            ExtendGetLocationModel location = new ExtendGetLocationModel();
+            if (lastLocation.getTransactionId() == 0) {
+                location.setFirst(true);
+                location.setX(1);
+                location.setY(1);
+                location.setTransactionId(1);
+            } else {
+                location.setFirst(false);
+                location.setTransactionId(lastLocation.getTransactionId() + 1);
+                location.setX(lastLocation.getX());
+                location.setY(lastLocation.getY());
+            }
+            request.setBuildingId(buildingId);
+            request.setRoomId(roomId);
+            request.setInfos(infoReferencePointInputs);
+            request.setExtendGetLocationModel(location);
+            request.setDirection(direction);
+            request.setOffset(offset);
+            mPresenter.postMotionInfo(request);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
+    @Override
+    public void finishGetLocation(PostMotionResponse response) {
+        showMessage("upload success");
+    }
+
+    @Override
+    public void errorGetLocation(Throwable error) {
+
+    }
+
+    @Override
+    public void finishPostMotion(PostMotionResponse response) {
+        lastLocation = response.getLocationModel();
+        responseTracking(response.getLocationModel());
+    }
+
+    @Override
     public void errorPostMotion(Throwable error) {
-//        showMessage(error.getMessage());
+
     }
 
     public void responseTracking(LocationModel locationModel) {

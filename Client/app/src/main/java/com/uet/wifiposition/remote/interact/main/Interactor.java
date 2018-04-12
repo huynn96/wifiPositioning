@@ -8,14 +8,12 @@ import com.ihsanbal.logging.LoggingInterceptor;
 import com.uet.wifiposition.common.Constants;
 import com.uet.wifiposition.remote.interact.resource.Rest;
 import com.uet.wifiposition.remote.interact.interf.IInteractor;
-import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.GetBuildingsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.GetRoomsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
-import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
+import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
-import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
 import com.uet.wifiposition.remote.requestbody.PostReferencePointGaussRequest;
 import com.uet.wifiposition.remote.requestbody.PostReferencePointRequestBody;
@@ -126,7 +124,7 @@ public class Interactor implements IInteractor {
     }
 
     @Override
-    public Observable<PostReferencePoint> postMotionInfo(PostRPGaussianMotionRequestBody postMotionSensorInfoRequestBody) {
+    public Observable<PostMotionResponse> postMotionInfo(PostRPGaussianMotionRequestBody postMotionSensorInfoRequestBody) {
         RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(postMotionSensorInfoRequestBody));
         return mRes.postMotionInfo(requestBodyD)
                 .subscribeOn(mScheduel)
@@ -138,7 +136,7 @@ public class Interactor implements IInteractor {
     }
 
     @Override
-    public Observable<GetLocationResponse> getLocation(GetLocationRequest request) {
+    public Observable<PostMotionResponse> getLocation(GetLocationRequest request) {
         String text = goGson.toJson(request);
         Log.d("request location:", text);
         RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(request));

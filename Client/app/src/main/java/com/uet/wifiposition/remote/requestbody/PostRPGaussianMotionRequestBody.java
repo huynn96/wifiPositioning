@@ -1,5 +1,10 @@
 package com.uet.wifiposition.remote.requestbody;
 
+import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
+import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
+
+import java.util.List;
+
 /**
  * Created by huynn on 05/03/2018.
  */
@@ -7,11 +12,42 @@ package com.uet.wifiposition.remote.requestbody;
 public class PostRPGaussianMotionRequestBody {
     private double offset;
     private int direction;
+    private int buildingId;
     private int roomId;
-    private int x1;
-    private int y1;
-    private int x2;
-    private int y2;
+    private List<InfoReferencePointInput> infos;
+    private ExtendGetLocationModel extendGetLocationModel;
+
+    public int getBuildingId() {
+        return buildingId;
+    }
+
+    public void setBuildingId(int buildingId) {
+        this.buildingId = buildingId;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
+    }
+
+    public List<InfoReferencePointInput> getInfos() {
+        return infos;
+    }
+
+    public void setInfos(List<InfoReferencePointInput> infos) {
+        this.infos = infos;
+    }
+
+    public ExtendGetLocationModel getExtendGetLocationModel() {
+        return extendGetLocationModel;
+    }
+
+    public void setExtendGetLocationModel(ExtendGetLocationModel extendGetLocationModel) {
+        this.extendGetLocationModel = extendGetLocationModel;
+    }
 
     public double getOffset() {
         return offset;
@@ -27,45 +63,5 @@ public class PostRPGaussianMotionRequestBody {
 
     public void setDirection(int direction) {
         this.direction = direction;
-    }
-
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public int getX1() {
-        return x1;
-    }
-
-    public void setX1(int x1) {
-        this.x1 = x1;
-    }
-
-    public int getY1() {
-        return y1;
-    }
-
-    public void setY1(int y1) {
-        this.y1 = y1;
-    }
-
-    public int getX2() {
-        return x2;
-    }
-
-    public void setX2(int x2) {
-        this.x2 = x2;
-    }
-
-    public int getY2() {
-        return y2;
-    }
-
-    public void setY2(int y2) {
-        this.y2 = y2;
     }
 }

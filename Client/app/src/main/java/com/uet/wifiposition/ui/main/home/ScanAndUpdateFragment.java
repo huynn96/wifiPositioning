@@ -12,7 +12,7 @@ import com.uet.wifiposition.R;
 import com.uet.wifiposition.remote.model.WifiInfoModel;
 import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
-import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
+import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 import com.uet.wifiposition.ui.main.home.publicwifiinfo.PublicWifiInfoFragment;
@@ -151,7 +151,7 @@ public class ScanAndUpdateFragment extends BaseMvpFragment<ScanAndUpdateContract
     }
 
     @Override
-    public void finishGetLocaiton(GetLocationResponse response) {
+    public void finishGetLocaiton(PostMotionResponse response) {
         showMessage("x: " + response.getLocationModel().getX() + ", y: " + response.getLocationModel().getY());
         TrackingFragment tracking = (TrackingFragment) getChildFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 2);
         tracking.responseTracking(response.getLocationModel());

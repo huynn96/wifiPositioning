@@ -7,7 +7,7 @@ import com.uet.wifiposition.remote.model.BaseResponse;
  * Created by ducnd on 10/13/17.
  */
 
-public class GetLocationResponse extends BaseResponse {
+public class PostMotionResponse extends BaseResponse {
     @SerializedName("data")
     private LocationModel locationModel = new LocationModel();
 
