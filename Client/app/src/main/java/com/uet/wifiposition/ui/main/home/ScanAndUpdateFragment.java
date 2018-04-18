@@ -12,6 +12,7 @@ import com.uet.wifiposition.R;
 import com.uet.wifiposition.remote.model.WifiInfoModel;
 import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
@@ -117,28 +118,28 @@ public class ScanAndUpdateFragment extends BaseMvpFragment<ScanAndUpdateContract
                 }
 
                 TrackingFragment tracking = (TrackingFragment) getChildFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 2);
-                if (tracking.isPathEmpty()) {
-                    ExtendGetLocationModel model = new ExtendGetLocationModel();
-                    model.setFirst(true);
-                    model.setX(10);
-                    model.setY(7);
-                    GetLocationRequest request = new GetLocationRequest();
-                    request.setBuildingId(buildingId);
-                    request.setRoomId(roomId);
-                    request.setExtendGetLocationModel(model);
-                    request.setInfos(infoReferencePointInputs);
-                    mPresenter.getLocation(request);
-                } else {
-                    ExtendGetLocationModel model = new ExtendGetLocationModel();
-                    model.setFirst(false);
-                    model.setTransactionId(tracking.getTransactionId());
-                    GetLocationRequest request = new GetLocationRequest();
-                    request.setBuildingId(buildingId);
-                    request.setRoomId(roomId);
-                    request.setExtendGetLocationModel(model);
-                    request.setInfos(infoReferencePointInputs);
-                    mPresenter.getLocation(request);
-                }
+//                if (tracking.isPathEmpty()) {
+//                    ExtendGetLocationModel model = new ExtendGetLocationModel();
+//                    model.setFirst(true);
+//                    model.setX(10);
+//                    model.setY(7);
+//                    GetLocationRequest request = new GetLocationRequest();
+//                    request.setBuildingId(buildingId);
+//                    request.setRoomId(roomId);
+//                    request.setExtendGetLocationModel(model);
+//                    request.setInfos(infoReferencePointInputs);
+//                    mPresenter.getLocation(request);
+//                } else {
+//                    ExtendGetLocationModel model = new ExtendGetLocationModel();
+//                    model.setFirst(false);
+//                    model.setTransactionId(tracking.getTransactionId());
+//                    GetLocationRequest request = new GetLocationRequest();
+//                    request.setBuildingId(buildingId);
+//                    request.setRoomId(roomId);
+//                    request.setExtendGetLocationModel(model);
+//                    request.setInfos(infoReferencePointInputs);
+//                    mPresenter.getLocation(request);
+//                }
 
                 break;
             case R.id.btn_choose_all:
@@ -151,10 +152,10 @@ public class ScanAndUpdateFragment extends BaseMvpFragment<ScanAndUpdateContract
     }
 
     @Override
-    public void finishGetLocaiton(PostMotionResponse response) {
-        showMessage("x: " + response.getLocationModel().getX() + ", y: " + response.getLocationModel().getY());
-        TrackingFragment tracking = (TrackingFragment) getChildFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 2);
-        tracking.responseTracking(response.getLocationModel());
+    public void finishGetLocaiton(GetLocationResponse response) {
+//        showMessage("x: " + response.getLocationModel().getX() + ", y: " + response.getLocationModel().getY());
+//        TrackingFragment tracking = (TrackingFragment) getChildFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 2);
+//        tracking.responseTracking(response.getLocationModel());
     }
 
     @Override

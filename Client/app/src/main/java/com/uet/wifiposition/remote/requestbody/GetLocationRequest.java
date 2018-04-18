@@ -2,6 +2,7 @@ package com.uet.wifiposition.remote.requestbody;
 
 import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
+import com.uet.wifiposition.remote.model.getposition.LocationModel;
 
 import java.util.List;
 
@@ -10,10 +11,13 @@ import java.util.List;
  */
 
 public class GetLocationRequest {
+    private double offset;
+    private int direction;
     private int buildingId;
     private int roomId;
+    private int stepCount;
     private List<InfoReferencePointInput> infos;
-    private ExtendGetLocationModel extendGetLocationModel;
+    private List<LocationModel> oldCandidates;
 
     public int getBuildingId() {
         return buildingId;
@@ -39,11 +43,35 @@ public class GetLocationRequest {
         this.infos = infos;
     }
 
-    public ExtendGetLocationModel getExtendGetLocationModel() {
-        return extendGetLocationModel;
+    public double getOffset() {
+        return offset;
     }
 
-    public void setExtendGetLocationModel(ExtendGetLocationModel extendGetLocationModel) {
-        this.extendGetLocationModel = extendGetLocationModel;
+    public void setOffset(double offset) {
+        this.offset = offset;
+    }
+
+    public int getDirection() {
+        return direction;
+    }
+
+    public void setDirection(int direction) {
+        this.direction = direction;
+    }
+
+    public int getStepCount() {
+        return stepCount;
+    }
+
+    public void setStepCount(int stepCount) {
+        this.stepCount = stepCount;
+    }
+
+    public List<LocationModel> getOldCandidates() {
+        return oldCandidates;
+    }
+
+    public void setOldCandidates(List<LocationModel> oldCandidates) {
+        this.oldCandidates = oldCandidates;
     }
 }

@@ -1,6 +1,7 @@
 package com.uet.wifiposition.ui.main.home;
 
 import com.uet.wifiposition.remote.interact.interf.IBasePresenter;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.ui.base.ViewUI;
@@ -11,7 +12,7 @@ import com.uet.wifiposition.ui.base.ViewUI;
 
 public interface ScanAndUpdateContract {
     interface View extends ViewUI {
-        void finishGetLocaiton(PostMotionResponse response);
+        void finishGetLocaiton(GetLocationResponse response);
 
         void errorGetLocation(Throwable error);
     }

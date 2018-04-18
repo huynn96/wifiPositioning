@@ -12,6 +12,7 @@ import com.uet.wifiposition.remote.model.getbuilding.GetBuildingsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.GetRoomsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
@@ -136,7 +137,7 @@ public class Interactor implements IInteractor {
     }
 
     @Override
-    public Observable<PostMotionResponse> getLocation(GetLocationRequest request) {
+    public Observable<GetLocationResponse> getLocation(GetLocationRequest request) {
         String text = goGson.toJson(request);
         Log.d("request location:", text);
         RequestBody requestBodyD = RequestBody.create(MediaType.parse("application/json"), goGson.toJson(request));

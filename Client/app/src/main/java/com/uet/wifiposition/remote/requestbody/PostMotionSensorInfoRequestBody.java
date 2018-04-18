@@ -12,6 +12,8 @@ import java.util.List;
 public class PostMotionSensorInfoRequestBody {
     private List<Acceleration> accelerations;
     private List<Direction> directions;
+    private float a;
+    private float b;
 
     public List<Acceleration> getAccelerations() {
         return accelerations;
@@ -27,5 +29,21 @@ public class PostMotionSensorInfoRequestBody {
 
     public void setDirections(List<Direction> directions) {
         this.directions = directions;
+    }
+
+    public float getA() {
+        return a;
+    }
+
+    public void setA(float a) {
+        this.a = a;
+    }
+
+    public float getB() {
+        return b;
+    }
+
+    public void setB(float b) {
+        this.b = b;
     }
 }

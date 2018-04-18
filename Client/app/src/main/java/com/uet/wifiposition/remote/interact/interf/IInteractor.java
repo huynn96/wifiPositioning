@@ -4,6 +4,7 @@ import com.uet.wifiposition.remote.model.getbuilding.GetBuildingsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.GetRoomsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
@@ -29,5 +30,5 @@ public interface IInteractor {
 
     Observable<PostMotionResponse> postMotionInfo(PostRPGaussianMotionRequestBody postMotionSensorInfoRequestBody);
 
-    Observable<PostMotionResponse> getLocation(GetLocationRequest request);
+    Observable<GetLocationResponse> getLocation(GetLocationRequest request);
 }

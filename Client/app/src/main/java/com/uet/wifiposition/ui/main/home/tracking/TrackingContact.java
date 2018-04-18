@@ -2,6 +2,7 @@ package com.uet.wifiposition.ui.main.home.tracking;
 
 import com.uet.wifiposition.remote.interact.interf.IBasePresenter;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
@@ -13,7 +14,7 @@ import com.uet.wifiposition.ui.base.ViewUI;
 
 public interface TrackingContact {
     interface View extends ViewUI {
-        void finishGetLocation(PostMotionResponse response);
+        void finishGetLocation(GetLocationResponse response);
 
         void errorGetLocation(Throwable error);
 

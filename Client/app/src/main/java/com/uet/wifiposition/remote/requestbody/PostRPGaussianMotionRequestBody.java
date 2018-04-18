@@ -14,6 +14,7 @@ public class PostRPGaussianMotionRequestBody {
     private int direction;
     private int buildingId;
     private int roomId;
+    private int stepCount;
     private List<InfoReferencePointInput> infos;
     private ExtendGetLocationModel extendGetLocationModel;
 
@@ -63,5 +64,13 @@ public class PostRPGaussianMotionRequestBody {
 
     public void setDirection(int direction) {
         this.direction = direction;
+    }
+
+    public int getStepCount() {
+        return stepCount;
+    }
+
+    public void setStepCount(int stepCount) {
+        this.stepCount = stepCount;
     }
 }

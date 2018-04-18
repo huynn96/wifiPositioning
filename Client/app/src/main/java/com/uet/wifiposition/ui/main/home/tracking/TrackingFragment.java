@@ -1,6 +1,7 @@
 package com.uet.wifiposition.ui.main.home.tracking;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -17,10 +18,12 @@ import com.uet.wifiposition.remote.model.WifiInfoModel;
 import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.model.getposition.LocationModel;
 import com.uet.wifiposition.remote.model.motion.Acceleration;
 import com.uet.wifiposition.remote.model.motion.Direction;
+import com.uet.wifiposition.remote.requestbody.GetLocationRequest;
 import com.uet.wifiposition.remote.requestbody.PostMotionSensorInfoRequestBody;
 import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
@@ -34,6 +37,7 @@ import org.json.JSONObject;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -60,6 +64,9 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     private float geomagneticMatrix[];
     private TrackingPresenter mPresenter;
     private LocationModel lastLocation;
+    private SharedPreferences sharedPref;
+    private String typePositioning;
+    private List<LocationModel> oldCandidates;
 
     @Override
     public int getLayoutMain() {
@@ -76,6 +83,12 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
 
     @Override
     public void initComponents(View view) {
+        oldCandidates = new ArrayList<>();
+        sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putFloat(getString(R.string.step_length_params_a), (float) -0.07);
+        editor.putFloat(getString(R.string.step_length_params_b), (float) 0.46);
+        editor.apply();
         mPresenter = new TrackingPresenter(this);
         SM = (SensorManager) this.getActivity().getSystemService(Context.SENSOR_SERVICE);
         myAcceleration = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -88,6 +101,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
                     collectButton.setText("Pause");
                     start[0] = false;
                     startButton();
+                    typePositioning = "collect";
                 } else {
                     collectButton.setText("Collect");
                     start[0] = true;
@@ -103,6 +117,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
                     localizationButton.setText("Pause");
                     start[0] = false;
                     startButton();
+                    typePositioning = "localization";
                 } else {
                     localizationButton.setText("Localization");
                     start[0] = true;
@@ -146,8 +161,14 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
             public void onTick(long millisUntilFinished) {
                 Log.d("COUNT", String.valueOf(accelerationData.size()));
                 PostMotionSensorInfoRequestBody request = new PostMotionSensorInfoRequestBody();
+                float a = sharedPref.getFloat(getString(R.string.step_length_params_a), (float) -0.07);
+                float b = sharedPref.getFloat(getString(R.string.step_length_params_b), (float) 0.46);
+                Log.d("A", String.valueOf(a));
+                Log.d("B", String.valueOf(b));
                 request.setAccelerations(accelerationData);
                 request.setDirections(directionData);
+                request.setA(a);
+                request.setB(b);
                 if (accelerationData.size() > 0) {
                     socket.emit("localization", goGson.toJson(request));
                 }
@@ -220,52 +241,96 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
         try {
             double offset = response.getDouble("offset");
             int direction = response.getInt("direction");
-            PostRPGaussianMotionRequestBody request = new PostRPGaussianMotionRequestBody();
-            ScanWifiInfoFragment scan = (ScanWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 0);
-            List<WifiInfoModel> wifiInfoModels = scan.getListWifiInfoChoose();
-            if (wifiInfoModels == null || wifiInfoModels.size() == 0) {
-                showMessage(R.string.Loading);
-                return;
+            int stepCount = response.getInt("stepCount");
+            if (typePositioning == "collect") {
+                sendMotion(offset, direction, stepCount);
             }
-            PublicWifiInfoFragment publicInfo = (PublicWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 1);
-            int buildingId = publicInfo.getBuildingId();
-            int roomId = publicInfo.getRoomId();
-            if (buildingId == -1 || roomId == -1) {
-                showMessage(R.string.Loading);
-                return;
+            if (typePositioning == "localization") {
+                sendLocalization(offset, direction, stepCount);
             }
-            List<InfoReferencePointInput> infoReferencePointInputs = new ArrayList<>();
-            for (WifiInfoModel wifiInfoModel : wifiInfoModels) {
-                Log.d("Wifi", String.valueOf(wifiInfoModel));
-                infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
-            }
-            ExtendGetLocationModel location = new ExtendGetLocationModel();
-            if (lastLocation.getTransactionId() == 0) {
-                location.setFirst(true);
-                location.setX(1);
-                location.setY(1);
-                location.setTransactionId(1);
-            } else {
-                location.setFirst(false);
-                location.setTransactionId(lastLocation.getTransactionId() + 1);
-                location.setX(lastLocation.getX());
-                location.setY(lastLocation.getY());
-            }
-            request.setBuildingId(buildingId);
-            request.setRoomId(roomId);
-            request.setInfos(infoReferencePointInputs);
-            request.setExtendGetLocationModel(location);
-            request.setDirection(direction);
-            request.setOffset(offset);
-            mPresenter.postMotionInfo(request);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
+    private void sendLocalization(double offset, int direction, int stepCount) {
+        GetLocationRequest request = new GetLocationRequest();
+        ScanWifiInfoFragment scan = (ScanWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 0);
+        List<WifiInfoModel> wifiInfoModels = scan.getListWifiInfoChoose();
+        if (wifiInfoModels == null || wifiInfoModels.size() == 0) {
+            showMessage(R.string.Loading);
+            return;
+        }
+        PublicWifiInfoFragment publicInfo = (PublicWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 1);
+        int buildingId = publicInfo.getBuildingId();
+        int roomId = publicInfo.getRoomId();
+        if (buildingId == -1 || roomId == -1) {
+            showMessage(R.string.Loading);
+            return;
+        }
+        List<InfoReferencePointInput> infoReferencePointInputs = new ArrayList<>();
+        for (WifiInfoModel wifiInfoModel : wifiInfoModels) {
+            Log.d("Wifi", String.valueOf(wifiInfoModel));
+            infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
+        }
+        if (oldCandidates.size() > 0) {
+            request.setOldCandidates(oldCandidates);
+        }
+        request.setBuildingId(buildingId);
+        request.setRoomId(roomId);
+        request.setInfos(infoReferencePointInputs);
+        request.setDirection(direction);
+        request.setOffset(offset);
+        request.setStepCount(stepCount);
+        mPresenter.getLocation(request);
+    }
+
+    private void sendMotion(double offset, int direction, int stepCount) {
+        PostRPGaussianMotionRequestBody request = new PostRPGaussianMotionRequestBody();
+        ScanWifiInfoFragment scan = (ScanWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 0);
+        List<WifiInfoModel> wifiInfoModels = scan.getListWifiInfoChoose();
+        if (wifiInfoModels == null || wifiInfoModels.size() == 0) {
+            showMessage(R.string.Loading);
+            return;
+        }
+        PublicWifiInfoFragment publicInfo = (PublicWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 1);
+        int buildingId = publicInfo.getBuildingId();
+        int roomId = publicInfo.getRoomId();
+        if (buildingId == -1 || roomId == -1) {
+            showMessage(R.string.Loading);
+            return;
+        }
+        List<InfoReferencePointInput> infoReferencePointInputs = new ArrayList<>();
+        for (WifiInfoModel wifiInfoModel : wifiInfoModels) {
+            Log.d("Wifi", String.valueOf(wifiInfoModel));
+            infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
+        }
+        ExtendGetLocationModel location = new ExtendGetLocationModel();
+        if (lastLocation.getTransactionId() == 0) {
+            location.setFirst(true);
+            location.setX(1);
+            location.setY(1);
+            location.setTransactionId(1);
+        } else {
+            location.setFirst(false);
+            location.setTransactionId(lastLocation.getTransactionId() + 1);
+            location.setX(lastLocation.getX());
+            location.setY(lastLocation.getY());
+        }
+        request.setBuildingId(buildingId);
+        request.setRoomId(roomId);
+        request.setInfos(infoReferencePointInputs);
+        request.setExtendGetLocationModel(location);
+        request.setDirection(direction);
+        request.setOffset(offset);
+        request.setStepCount(stepCount);
+        mPresenter.postMotionInfo(request);
+    }
+
     @Override
-    public void finishGetLocation(PostMotionResponse response) {
-        showMessage("upload success");
+    public void finishGetLocation(GetLocationResponse response) {
+        oldCandidates = response.getCandidates();
+        responseTracking(response.getPosition());
     }
 
     @Override

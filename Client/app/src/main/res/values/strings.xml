@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">WifiPosition</string>
+    <string name="step_length_params_a">StepLengthParamsA</string>
+    <string name="step_length_params_b">StepLengthParamsB</string>
     <string name="Position">Position</string>
     <string name="Loading">Loading...</string>
     <string name="Please_choose_wifi_to_upload">Please choose wifi to upload</string>

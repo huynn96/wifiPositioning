@@ -3,6 +3,7 @@ package com.uet.wifiposition.remote.interact.resource;
 import com.uet.wifiposition.remote.model.getbuilding.GetBuildingsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.GetRoomsResponse;
 import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
+import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 
 import io.reactivex.Observable;
@@ -30,7 +31,7 @@ public interface Rest {
     Observable<PostReferencePoint> postReferencePointGauss(@Body RequestBody requestBodyD);
 
     @POST("api/mobile/localization")
-    Observable<PostMotionResponse> getLocation(@Body RequestBody requestBody);
+    Observable<GetLocationResponse> getLocation(@Body RequestBody requestBody);
 
     @POST("api/mobile/motion-info")
     Observable<PostMotionResponse> postMotionInfo(@Body RequestBody requestBody);
