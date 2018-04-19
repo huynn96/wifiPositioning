@@ -78,7 +78,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
         trackingView = view.findViewById(R.id.tracking_view);
         collectButton = this.getActivity().findViewById(R.id.collect);
         localizationButton = this.getActivity().findViewById(R.id.localization);
-//        resultActivity = this.getActivity().findViewById(R.id.result_activity_tracking);
+        resultActivity = this.getActivity().findViewById(R.id.result_activity);
     }
 
     @Override
@@ -242,6 +242,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
             double offset = response.getDouble("offset");
             int direction = response.getInt("direction");
             int stepCount = response.getInt("stepCount");
+            resultActivity.setText(String.format("%s (degree)", direction));
             if (typePositioning == "collect") {
                 sendMotion(offset, direction, stepCount);
             }
@@ -273,9 +274,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
             Log.d("Wifi", String.valueOf(wifiInfoModel));
             infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
         }
-        if (oldCandidates.size() > 0) {
-            request.setOldCandidates(oldCandidates);
-        }
+        request.setOldCandidates(oldCandidates);
         request.setBuildingId(buildingId);
         request.setRoomId(roomId);
         request.setInfos(infoReferencePointInputs);

@@ -8,6 +8,7 @@ public class LocationModel {
     private int x;
     private int y;
     private int transactionId;
+    private double probability;
 
     public LocationModel(int x, int y) {
         this.x = x;
@@ -39,5 +40,13 @@ public class LocationModel {
 
     public void setTransactionId(int transactionId) {
         this.transactionId = transactionId;
+    }
+
+    public double getProbability() {
+        return probability;
+    }
+
+    public void setProbability(double probability) {
+        this.probability = probability;
     }
 }
