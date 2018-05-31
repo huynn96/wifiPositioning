@@ -1,2 +1,1 @@
-# WifiPosition
-# WifiPosition
+# WifiPosition Android Client
