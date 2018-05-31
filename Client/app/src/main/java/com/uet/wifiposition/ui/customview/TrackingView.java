@@ -88,8 +88,8 @@ public class TrackingView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        int numRows = 20;
-        int numCols = 20;
+        int numRows = 10;
+        int numCols = 10;
         if (sizeCell == 0) {
             sizeCell = (w-20) / numCols;
             pathRoot = new Path();
@@ -121,9 +121,8 @@ public class TrackingView extends View {
         }
     }
 
-    public void addPath(int x, int y) {
-        if (!isStart) {
-            isStart = true;
+    public void addPath(int x, int y, boolean isStart) {
+        if (isStart) {
             pathTracking.moveTo(x * sizeCell, y * sizeCell);
         } else {
             pathTracking.lineTo(x * sizeCell, y * sizeCell);
@@ -137,6 +136,7 @@ public class TrackingView extends View {
 
     public void clearPath() {
         locationModels = new ArrayList<>();
+        pathTracking = new Path();
     }
 
     @Override

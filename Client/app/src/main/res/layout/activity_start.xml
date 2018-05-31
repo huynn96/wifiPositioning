@@ -33,7 +33,7 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:singleLine="true"
-            android:text="http://192.168.1.40:3000"
+            android:text="http://192.168.0.197:3000"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:theme="@style/EditTextNormalTheme" />

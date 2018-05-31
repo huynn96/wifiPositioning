@@ -6,6 +6,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
@@ -17,7 +19,6 @@ import com.uet.wifiposition.R;
 import com.uet.wifiposition.remote.model.WifiInfoModel;
 import com.uet.wifiposition.remote.model.getbuilding.ExtendGetLocationModel;
 import com.uet.wifiposition.remote.model.getbuilding.InfoReferencePointInput;
-import com.uet.wifiposition.remote.model.getbuilding.PostReferencePoint;
 import com.uet.wifiposition.remote.model.getposition.GetLocationResponse;
 import com.uet.wifiposition.remote.model.getposition.PostMotionResponse;
 import com.uet.wifiposition.remote.model.getposition.LocationModel;
@@ -29,15 +30,14 @@ import com.uet.wifiposition.remote.requestbody.PostRPGaussianMotionRequestBody;
 import com.uet.wifiposition.ui.base.BaseMvpFragment;
 import com.uet.wifiposition.ui.customview.TrackingView;
 import com.uet.wifiposition.ui.main.home.publicwifiinfo.PublicWifiInfoFragment;
-import com.uet.wifiposition.ui.main.home.scanwifi.ScanWifiInfoFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -67,6 +67,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     private SharedPreferences sharedPref;
     private String typePositioning;
     private List<LocationModel> oldCandidates;
+    private WifiManager wifiManager;
 
     @Override
     public int getLayoutMain() {
@@ -84,6 +85,9 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     @Override
     public void initComponents(View view) {
         oldCandidates = new ArrayList<>();
+        lastLocation = new LocationModel();
+        lastLocation.setTransactionId(0);
+        wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putFloat(getString(R.string.step_length_params_a), (float) -0.07);
@@ -100,6 +104,12 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
                 if (start[0]) {
                     collectButton.setText("Pause");
                     start[0] = false;
+                    if (typePositioning == "localization") {
+                        trackingView.clearPath();
+                        oldCandidates = new ArrayList<>();
+                        lastLocation = new LocationModel();
+                        lastLocation.setTransactionId(0);
+                    }
                     startButton();
                     typePositioning = "collect";
                 } else {
@@ -116,6 +126,12 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
                 if (start[0]) {
                     localizationButton.setText("Pause");
                     start[0] = false;
+                    if (typePositioning == "collect") {
+                        trackingView.clearPath();
+                        oldCandidates = new ArrayList<>();
+                        lastLocation = new LocationModel();
+                        lastLocation.setTransactionId(0);
+                    }
                     startButton();
                     typePositioning = "localization";
                 } else {
@@ -127,7 +143,7 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
         });
 
         try {
-            socket = IO.socket("http://192.168.1.40:3000");
+            socket = IO.socket("http://192.168.0.197:3000");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -147,9 +163,6 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     }
 
     public void startButton() {
-        trackingView.clearPath();
-        lastLocation = new LocationModel(1,1);
-        lastLocation.setTransactionId(0);
         accelerationData = new ArrayList<>();
         directionData = new ArrayList<>();
         accelerometerValues = null;
@@ -256,12 +269,6 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
 
     private void sendLocalization(double offset, int direction, int stepCount) {
         GetLocationRequest request = new GetLocationRequest();
-        ScanWifiInfoFragment scan = (ScanWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 0);
-        List<WifiInfoModel> wifiInfoModels = scan.getListWifiInfoChoose();
-        if (wifiInfoModels == null || wifiInfoModels.size() == 0) {
-            showMessage(R.string.Loading);
-            return;
-        }
         PublicWifiInfoFragment publicInfo = (PublicWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 1);
         int buildingId = publicInfo.getBuildingId();
         int roomId = publicInfo.getRoomId();
@@ -270,9 +277,9 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
             return;
         }
         List<InfoReferencePointInput> infoReferencePointInputs = new ArrayList<>();
-        for (WifiInfoModel wifiInfoModel : wifiInfoModels) {
-            Log.d("Wifi", String.valueOf(wifiInfoModel));
-            infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
+        List<ScanResult> wifiInfo = wifiManager.getScanResults();
+        for (ScanResult info : wifiInfo) {
+            infoReferencePointInputs.add(new InfoReferencePointInput(info.BSSID, info.SSID, info.level));
         }
         request.setOldCandidates(oldCandidates);
         request.setBuildingId(buildingId);
@@ -286,12 +293,6 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
 
     private void sendMotion(double offset, int direction, int stepCount) {
         PostRPGaussianMotionRequestBody request = new PostRPGaussianMotionRequestBody();
-        ScanWifiInfoFragment scan = (ScanWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 0);
-        List<WifiInfoModel> wifiInfoModels = scan.getListWifiInfoChoose();
-        if (wifiInfoModels == null || wifiInfoModels.size() == 0) {
-            showMessage(R.string.Loading);
-            return;
-        }
         PublicWifiInfoFragment publicInfo = (PublicWifiInfoFragment) getFragmentManager().findFragmentByTag("android:switcher:" + R.id.vp_position + ":" + 1);
         int buildingId = publicInfo.getBuildingId();
         int roomId = publicInfo.getRoomId();
@@ -300,19 +301,17 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
             return;
         }
         List<InfoReferencePointInput> infoReferencePointInputs = new ArrayList<>();
-        for (WifiInfoModel wifiInfoModel : wifiInfoModels) {
-            Log.d("Wifi", String.valueOf(wifiInfoModel));
-            infoReferencePointInputs.add(new InfoReferencePointInput(wifiInfoModel.getMacAddress(), wifiInfoModel.getName(), wifiInfoModel.getLevel()));
+        List<ScanResult> wifiInfo = wifiManager.getScanResults();
+        for (ScanResult info : wifiInfo) {
+            infoReferencePointInputs.add(new InfoReferencePointInput(info.BSSID, info.SSID, info.level));
         }
         ExtendGetLocationModel location = new ExtendGetLocationModel();
         if (lastLocation.getTransactionId() == 0) {
             location.setFirst(true);
-            location.setX(1);
-            location.setY(1);
-            location.setTransactionId(1);
+            location.setTransactionId(0);
         } else {
             location.setFirst(false);
-            location.setTransactionId(lastLocation.getTransactionId() + 1);
+            location.setTransactionId(lastLocation.getTransactionId());
             location.setX(lastLocation.getX());
             location.setY(lastLocation.getY());
         }
@@ -349,8 +348,12 @@ public class TrackingFragment extends BaseMvpFragment<TrackingContact.Presenter>
     }
 
     public void responseTracking(LocationModel locationModel) {
-        trackingView.addPath(locationModel.getX(), locationModel.getY());
+//        List<Integer> x = Arrays.asList(1, 0, 1, 1, 2, 3, 3);
+//        List<Integer> y = Arrays.asList(1, 1, 1, 2, 2, 2, 3);
         transactionId = locationModel.getTransactionId();
+        Log.d("TRANSACTION", String.valueOf(transactionId));
+        trackingView.addPath(locationModel.getX(), locationModel.getY(), transactionId == 1);
+//        trackingView.addPath(x.get(transactionId - 1), y.get(transactionId - 1), transactionId == 1);
     }
 
     public boolean isPathEmpty() {
